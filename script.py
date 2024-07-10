@@ -13,15 +13,30 @@ load_dotenv()
 # Configuration
 gmail_user = os.getenv('GMAIL_USER')
 gmail_password = os.getenv('GMAIL_PASSWORD')  # Use your regular Google account password here
-subject = 'Subject of the Email'
+
 excel_file_path = 'files/data.xlsx'
 attachment_folder = 'files/attached_files/'
 
-# New email body template
-body_template = """
+
+# Email body templates
+
+subject_with_company = 'Application to suitable roles at {company_name}'
+body_with_company = """
 Dear Hiring Manager,
 
-With extensive experience at Raymond Limited in Supply Chain management, Warehouse, Production, Quality control management, I am willing to express my interest in managerial roles at {company_name} suitable for my profile. Please find my cover letter and CV attached for reference.
+With extensive experience at Raymond Limited in Supply Chain management, Warehouse, Production, Quality control management, I am willing to express my interest in managerial roles at {company_name} suitable to my profile. Please find my cover letter and CV attached for reference.
+
+Sincerely,
+Channabasavaraj Banagar
+LinkedIn: https://www.linkedin.com/in/channabasavaraj-banagar-5069441b0/
+Contact no: 9920751247
+"""
+
+subject_without_company = 'Application to managerial roles at your esteemed organization'
+body_without_company = """
+Dear Hiring Manager,
+
+With extensive experience at Raymond Limited in Supply Chain management, Warehouse, Production, Quality control management, I am willing to express my interest in managerial roles suitable to my profile. Please find my cover letter and CV attached for reference.
 
 Sincerely,
 Channabasavaraj Banagar
@@ -34,10 +49,13 @@ def send_email(to_email, company_name, files):
    message = MIMEMultipart()
    message['From'] = gmail_user
    message['To'] = to_email
-   message['Subject'] = f"Application to suitable roles at {company_name}"
 
-   # Substitute company_name in the body template
-   body = body_template.format(company_name=company_name)
+   if company_name:
+       message['Subject'] = subject_with_company.format(company_name=company_name)
+       body = body_with_company.format(company_name=company_name)
+   else:
+       message['Subject'] = subject_without_company
+       body = body_without_company
 
    # Attach the body with the msg instance
    message.attach(MIMEText(body, 'plain'))
@@ -79,4 +97,5 @@ files_to_attach = [os.path.join(attachment_folder, file) for file in os.listdir(
 
 # Send email to each company
 for index, row in df.iterrows():
-   send_email(row['Company email id'], row['Company Name'], files_to_attach)
+   company_name = row['Company Name']
+   send_email(row['Company email id'], company_name.strip() if isinstance(company_name, str) else "", files_to_attach)
